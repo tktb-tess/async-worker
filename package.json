@@ -21,7 +21,8 @@
     "@types/node": "^24.8.1",
     "typescript": "~5.9.2",
     "vite": "^7.1.5",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
   },
   "volta": {
     "node": "22.20.0"

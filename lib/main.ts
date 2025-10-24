@@ -1,4 +1,4 @@
-const withResolvers = <T>() => {
+const withResolvers = <T = unknown>() => {
   let resolve!: (value: T | PromiseLike<T>) => void;
   let reject!: (reason?: unknown) => void;
 
@@ -50,9 +50,6 @@ class AsyncWorker {
   }
 
   receive() {
-    if (!this.#receiver) {
-      throw Error(`No messages are sent`);
-    }
     return this.#receiver;
   }
 }
