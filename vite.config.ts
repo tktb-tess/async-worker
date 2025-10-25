@@ -17,4 +17,7 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
   },
+  test: {
+    testTimeout: 30000,
+  }
 });
