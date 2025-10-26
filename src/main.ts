@@ -1,4 +1,4 @@
-import { AsyncWorker } from '../lib/main';
+import AsyncWorker from '../lib/main';
 
 const app = document.getElementById('app') as HTMLDivElement;
 app.textContent = 'Please press F12 to open devtools console';

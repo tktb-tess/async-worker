@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
@@ -7,8 +8,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, './lib/main.ts'),
-      fileName: 'bundle',
-      formats: ['es'],
+      fileName: (format) => `bundle${format === 'umd' ? '.min' : ''}.js`,
+      name: 'AsyncWorker',
+      formats: ['es', 'umd'],
     },
   },
   server: {
@@ -19,5 +21,5 @@ export default defineConfig({
   },
   test: {
     testTimeout: 30000,
-  }
+  },
 });

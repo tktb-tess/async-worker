@@ -14,7 +14,7 @@ const withResolvers = <T = unknown>() => {
   };
 };
 
-class AsyncWorker {
+export default class AsyncWorker {
   readonly #worker: Worker;
   #receiver: Promise<unknown> | null;
 
@@ -53,5 +53,3 @@ class AsyncWorker {
     return this.#receiver;
   }
 }
-
-export { AsyncWorker };
