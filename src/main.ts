@@ -1,23 +1,25 @@
 import AsyncWorker from '../lib/main';
+import { randF64, sleep } from './lazyrand';
 
-const app = document.getElementById('app') as HTMLDivElement;
-app.textContent = 'Please press F12 to open devtools console';
+const main = async () => {
+  const app = document.getElementById('app') as HTMLDivElement;
+  app.textContent = 'Please press F12 to open devtools console';
 
-const wo = new AsyncWorker(new URL('worker.ts', import.meta.url), {
-  type: 'module',
-});
-const buffer = new SharedArrayBuffer(32);
+  const wo = new AsyncWorker(new URL('worker.ts', import.meta.url), {
+    type: 'module',
+  });
 
-wo.postMessage(buffer);
+  wo.postMessage(0);
 
-const ans = await wo.receive();
-console.log('received at main!', ans);
+  const a = await wo.receive();
+  console.log('main: received from worker!', a);
 
-const view = new Uint8Array(buffer);
+  for (let i = 0; i < 10; i++) {
+    console.log('from main', i, randF64());
+    await sleep();
+  }
 
-for (const a of view) {
-  console.log('from main:', a.toString(16).padStart(2, '0'));
-}
+  console.log('main finished!');
+};
 
-console.log(await wo.receive());
-console.log(`main finished!`);
+main();

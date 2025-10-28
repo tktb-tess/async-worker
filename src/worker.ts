@@ -1,14 +1,14 @@
+import { randF64, sleep } from './lazyrand';
+
 globalThis.addEventListener('message', async (e) => {
-  const [id, buffer] = e.data as [string, SharedArrayBuffer];
-  console.log('received at worker!', buffer);
-  const view = new Uint8Array(buffer);
-  view.set(crypto.getRandomValues(new Uint8Array(view.length)));
+  const [id, inp] = e.data as [string, unknown];
+  console.log('worker: received from main!', id, inp);
 
-  for (const i of view) {
-    console.log('from worker:', i.toString(16).padStart(2, '0'));
+  for (let i = 0; i < 10; i++) {
+    console.log('from worker', i, randF64());
+    await sleep();
   }
-  console.log('worker finished!');
-  globalThis.postMessage([id, true]);
-});
 
-export {};
+  console.log('worker finished!');
+  postMessage([id, 777]);
+});
