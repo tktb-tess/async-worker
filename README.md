@@ -10,7 +10,7 @@ const wo = new AsyncWorker(new URL('worker.ts', import.meta.url), {
 // send worker a message
 wo.postMessage('Hello worker!');
 
-// receive result from worker asynchronically
+// receive result from a worker asynchronously
 const a = await wo.receive();
 console.log(a); // Nice to meet you!
 
@@ -20,13 +20,13 @@ worker.ts
 
 ```ts
 globalThis.addEventListener('message', async (e) => {
-  // you need to receive message as a tuple form of [ID, message]
+  // You need to receive a message as a tuple form of [ID, message]
   const [id, msg] = e.data as [string, string];
   console.log(msg); // Hello worker!
 
   // some programs ...
 
-  // And you also need to send back a message with the same ID as received
+  // And you also need to send back a message and the received ID together
   postMessage([id, 'Nice to meet you!']);
 });
 ```
