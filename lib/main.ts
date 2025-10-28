@@ -14,42 +14,60 @@ const withResolvers = <T = unknown>() => {
   };
 };
 
+type UUIDv4 = ReturnType<typeof crypto.randomUUID>;
+
+const isUuidv4 = (str: unknown): str is UUIDv4 => {
+  if (typeof str !== 'string') return false;
+  const regex = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[\da-f]{4}-[\da-f]{12}$/;
+  return regex.test(str);
+};
+
 export default class AsyncWorker {
   readonly #worker: Worker;
-  #receiver: Promise<unknown> | null;
+  readonly #receivers: Map<UUIDv4, ReturnType<typeof withResolvers>>;
 
   constructor(scriptURL: string | URL, options?: WorkerOptions) {
     this.#worker = new Worker(scriptURL, options);
-    this.#receiver = null;
-  }
+    this.#receivers = new Map();
 
-  #makeReceiver() {
-    const { promise, resolve, reject } = withResolvers();
-
-    this.#worker.onmessage = (e) => {
-      this.#worker.onmessage = null;
-      this.#worker.onerror = null;
-      this.#receiver = null;
-      resolve(e.data);
+    this.#worker.onmessage = (e: MessageEvent<unknown>) => {
+      const [id, ans] = e.data as [UUIDv4, unknown];
+      const receiver = this.#receivers.get(id);
+      if (!receiver) {
+        throw Error('Receiver Not Found');
+      }
+      receiver.resolve(ans);
     };
 
     this.#worker.onerror = (e) => {
-      this.#worker.onmessage = null;
-      this.#worker.onerror = null;
-      this.#receiver = null;
-      reject(e.error);
+      const err = e.error as unknown;
+      console.error(err);
+      if (Array.isArray(err) && isUuidv4(err[0]) && err.length >= 2) {
+        const [id, ee] = err;
+        const receiver = this.#receivers.get(id);
+        if (!receiver) {
+          throw Error('Receiver Not Found');
+        }
+        receiver.reject(ee);
+      } else {
+        throw Error('Missing ID');
+      }
     };
-
-    this.#receiver = promise;
-    return promise;
   }
 
   postMessage(message: unknown) {
-    this.#worker.postMessage(message);
-    return this.#makeReceiver();
+    const id = crypto.randomUUID();
+    this.#worker.postMessage([id, message]);
+    const rslv = withResolvers();
+    this.#receivers.set(id, rslv);
   }
 
-  receive() {
-    return this.#receiver;
+  async receive() {
+    const [entry] = this.#receivers.entries();
+    if (!entry) return;
+    const [id, { promise }] = entry;
+    const ans = await promise;
+    this.#receivers.delete(id);
+    return ans;
   }
 }

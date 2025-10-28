@@ -1,8 +1,14 @@
 globalThis.addEventListener('message', async (e) => {
-  const buffer = e.data as SharedArrayBuffer;
-  console.log('worker received!', buffer);
-  const view = new BigUint64Array(buffer);
-  view.set(crypto.getRandomValues(new BigUint64Array(view.length)));
+  const [id, buffer] = e.data as [string, SharedArrayBuffer];
+  console.log('received at worker!', buffer);
+  const view = new Uint8Array(buffer);
+  view.set(crypto.getRandomValues(new Uint8Array(view.length)));
 
-  globalThis.postMessage(true);
+  for (const i of view) {
+    console.log('from worker:', i.toString(16).padStart(2, '0'));
+  }
+  console.log('worker finished!');
+  globalThis.postMessage([id, true]);
 });
+
+export {};
