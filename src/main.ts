@@ -4,16 +4,15 @@ import { sleep } from './lazyrand';
 const main = async () => {
   const app = document.getElementById('app') as HTMLDivElement;
   app.textContent = 'Please press F12 to open devtools console';
+  const worker = new Worker(new URL('worker.ts', import.meta.url), {
+    type: 'module',
+  });
 
-  const wo = new AsyncWorker(
-    new Worker(new URL('worker.ts', import.meta.url), {
-      type: 'module',
-    })
-  );
+  const aWorker = new AsyncWorker<number, number>(worker);
 
-  wo.postMessage(0);
+  aWorker.postMessage(0);
 
-  const a = await wo.receive();
+  const a = await aWorker.receive();
   console.log('main: received from worker!', a);
 
   for (let i = 0; i < 10; i++) {

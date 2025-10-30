@@ -1,19 +1,26 @@
 # async-worker
 
+Wrapping Worker by Promise
+
+## Usage
+
 main.ts
 
 ```ts
-const wo = new AsyncWorker(new URL('worker.ts', import.meta.url), {
-  type: 'module',
-});
+import AsyncWorker from '@tktb-tess/async-worker';
+
+const w = new Worker(
+  new URL('worker.ts', import.meta.url),
+  { type: 'module' }
+);
+const worker = new AsyncWorker<string, string>(w);
 
 // send worker a message
-wo.postMessage('Hello worker!');
+worker.postMessage('Hello worker!');
 
 // receive result from a worker asynchronously
-const a = await wo.receive();
+const a = await worker.receive();
 console.log(a); // Nice to meet you!
-
 ```
 
 worker.ts
@@ -21,7 +28,8 @@ worker.ts
 ```ts
 globalThis.addEventListener('message', async (e) => {
   // You need to receive a message as a tuple form of [ID, message]
-  const [id, msg] = e.data as [string, string];
+  // ID is a timestamp
+  const [id, msg] = e.data as [number, string];
   console.log(msg); // Hello worker!
 
   // some programs ...
