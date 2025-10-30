@@ -1,13 +1,14 @@
-const u64 = new BigUint64Array(1);
-const f64 = new Float64Array(u64.buffer);
+const buff = new ArrayBuffer(8);
 
 const randF64 = () => {
-  crypto.getRandomValues(u64);
-  return f64[0];
+  crypto.getRandomValues(new BigUint64Array(buff));
+  return new Float64Array(buff)[0];
 };
 
 const sleep = async () => {
   return new Promise<void>((res) => setTimeout(res, 600));
 }
+
+
 
 export { randF64, sleep };
