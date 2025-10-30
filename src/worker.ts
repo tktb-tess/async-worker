@@ -1,13 +1,11 @@
-import { randF64, sleep } from './lazyrand';
+import { sleep } from './lazyrand';
 
-type UUIDv4 = ReturnType<typeof crypto.randomUUID>;
-
-globalThis.addEventListener('message', async (e) => {
-  const [id, inp] = e.data as [UUIDv4, unknown];
+globalThis.addEventListener('message', async (e: MessageEvent<[number, unknown]>) => {
+  const [id, inp] = e.data;
   console.log('worker: received from main!', id, inp);
 
   for (let i = 0; i < 10; i++) {
-    console.log('from worker', i, randF64());
+    console.log('from worker', i, Math.random());
     await sleep();
   }
 

@@ -1,37 +1,15 @@
-const withResolvers = <T = unknown>() => {
-  let resolve!: (value: T | PromiseLike<T>) => void;
-  let reject!: (reason?: unknown) => void;
+import { resolvers } from './util';
 
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-
-  return {
-    promise,
-    resolve,
-    reject,
-  };
-};
-
-type UUIDv4 = ReturnType<typeof crypto.randomUUID>;
-
-const isUuidv4 = (str: unknown): str is UUIDv4 => {
-  if (typeof str !== 'string') return false;
-  const regex = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[\da-f]{4}-[\da-f]{12}$/;
-  return regex.test(str);
-};
-
-export default class AsyncWorker {
+export default class AsyncWorker<TPost = unknown, TRtrn = unknown> {
   readonly #worker: Worker;
-  readonly #receivers: Map<UUIDv4, ReturnType<typeof withResolvers>>;
+  readonly #receivers: Map<number, ReturnType<typeof resolvers<TRtrn>>>;
 
-  constructor(scriptURL: string | URL, options?: WorkerOptions) {
-    this.#worker = new Worker(scriptURL, options);
+  constructor(worker: Worker) {
+    this.#worker = worker;
     this.#receivers = new Map();
 
-    this.#worker.onmessage = (e: MessageEvent<unknown>) => {
-      const [id, ans] = e.data as [UUIDv4, unknown];
+    this.#worker.onmessage = (e: MessageEvent<[number, TRtrn]>) => {
+      const [id, ans] = e.data;
       const receiver = this.#receivers.get(id);
       if (!receiver) {
         throw Error('Receiver Not Found');
@@ -40,25 +18,31 @@ export default class AsyncWorker {
     };
 
     this.#worker.onerror = (e) => {
-      const err = e.error as unknown;
-      console.error(err);
-      if (Array.isArray(err) && isUuidv4(err[0]) && err.length >= 2) {
-        const [id, ee] = err;
+      const _err = e.error as unknown;
+      console.error(_err);
+      if (
+        Array.isArray(_err) &&
+        typeof _err[0] === 'number' &&
+        _err.length >= 2
+      ) {
+        const [id, err] = _err;
         const receiver = this.#receivers.get(id);
+
         if (!receiver) {
           throw Error('Receiver Not Found');
         }
-        receiver.reject(ee);
+
+        receiver.reject(err);
       } else {
         throw Error('Missing ID');
       }
     };
   }
 
-  postMessage(message: unknown) {
-    const id = crypto.randomUUID();
+  postMessage(message: TPost) {
+    const id = Date.now();
     this.#worker.postMessage([id, message]);
-    const rslv = withResolvers();
+    const rslv = resolvers<TRtrn>();
     this.#receivers.set(id, rslv);
   }
 

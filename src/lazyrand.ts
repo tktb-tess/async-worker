@@ -1,6 +1,5 @@
-const buff = new ArrayBuffer(8);
 
-const randF64 = () => {
+const randF64 = (buff: SharedArrayBuffer) => {
   crypto.getRandomValues(new BigUint64Array(buff));
   return new Float64Array(buff)[0];
 };

@@ -8,9 +8,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, './lib/main.ts'),
-      fileName: (format) => (format === 'umd' ? 'bundle.min.js' : 'bundle.js'),
+      fileName: (format) => (format === 'iife' ? 'bundle.min.js' : 'bundle.js'),
       name: 'AsyncWorker',
-      formats: ['es', 'umd'],
+      formats: ['es', 'iife'],
     },
   },
   server: {
