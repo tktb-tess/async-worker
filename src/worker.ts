@@ -1,17 +1,16 @@
 import { sleep } from './lazyrand';
+import type { MessageResult } from '../lib/main';
 
 globalThis.addEventListener(
   'message',
-  async (e: MessageEvent<[number, unknown]>) => {
+  async (e: MessageEvent<[number, number]>) => {
     const [id, inp] = e.data;
     console.log('worker: received from main!', id, inp);
-
-    for (let i = 0; i < 10; i++) {
-      console.log('from worker', i, Math.random());
-      await sleep();
+    await sleep(1000);
+    const res: MessageResult<number, Error> = {
+      success: false,
+      error: Error('thrown!'),
     }
-
-    console.log('worker finished!');
-    postMessage([id, 777]);
+    postMessage([id, res]);
   }
 );

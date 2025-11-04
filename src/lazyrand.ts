@@ -4,8 +4,8 @@ const randF64 = (buff: SharedArrayBuffer) => {
   return new Float64Array(buff)[0];
 };
 
-const sleep = async () => {
-  return new Promise<void>((res) => setTimeout(res, 600));
+const sleep = async (delay: number = 500) => {
+  return new Promise<void>((res) => setTimeout(res, delay));
 }
 
 

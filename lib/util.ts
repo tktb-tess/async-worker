@@ -13,3 +13,13 @@ export const resolvers = <T = unknown>() => {
     reject,
   };
 };
+
+export type MessageResult<T, E> =
+  | {
+      success: true;
+      value: T;
+    }
+  | {
+      success: false;
+      error: E;
+    };

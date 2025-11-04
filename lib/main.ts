@@ -1,4 +1,6 @@
 import { resolvers } from './util';
+import type { MessageResult } from './util';
+export type { MessageResult };
 
 export default class AsyncWorker<TPost = unknown, TRtrn = unknown> {
   readonly #worker: Worker;
@@ -8,35 +10,28 @@ export default class AsyncWorker<TPost = unknown, TRtrn = unknown> {
     this.#worker = worker;
     this.#receivers = new Map();
 
-    this.#worker.onmessage = (e: MessageEvent<[number, TRtrn]>) => {
-      const [id, ans] = e.data;
-      const receiver = this.#receivers.get(id);
-      if (!receiver) {
-        throw Error('Receiver Not Found');
-      }
-      receiver.resolve(ans);
-    };
-
-    this.#worker.onerror = (e) => {
-      const _err = e.error as unknown;
-      console.error(_err);
-      if (
-        Array.isArray(_err) &&
-        typeof _err[0] === 'number' &&
-        _err.length >= 2
-      ) {
-        const [id, err] = _err;
+    this.#worker.addEventListener(
+      'message',
+      (e: MessageEvent<[number, MessageResult<TRtrn, unknown>]>) => {
+        const [id, ans] = e.data;
         const receiver = this.#receivers.get(id);
-
         if (!receiver) {
           throw Error('Receiver Not Found');
         }
-
-        receiver.reject(err);
-      } else {
-        throw Error('Missing ID');
+        if (ans.success) {
+          receiver.resolve(ans.value);
+        } else {
+          const err = ans.error;
+          // console.error(err);
+          receiver.reject(err);
+        }
       }
-    };
+    );
+
+    this.#worker.addEventListener('error', (e) => {
+      console.error(e.message);
+      throw Error(e.message, { cause: e });
+    });
   }
 
   postMessage(message: TPost) {
@@ -47,11 +42,13 @@ export default class AsyncWorker<TPost = unknown, TRtrn = unknown> {
   }
 
   async receive() {
-    const [entry] = this.#receivers.entries();
-    if (!entry) return;
-    const [id, { promise }] = entry;
-    const ans = await promise;
-    this.#receivers.delete(id);
-    return ans;
+    const iterRes = this.#receivers.entries().next();
+    if (iterRes.done) return;
+
+    const [id, { promise }] = iterRes.value;
+
+    return promise.finally(() => {
+      this.#receivers.delete(id);
+    });
   }
 }
